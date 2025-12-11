@@ -140,9 +140,12 @@ const dialogues = {
     { speaker: '손님', text: '제가 뭘 살지 알고 계신 것 같아서.' },
     { speaker: '사장', text: '아... 오래 하다 보면 그래요.' },
     { speaker: '손님', text: '그렇구나. 몇 년이나 하셨어요?' },
-    { type: 'choice', choices: ['...잘 모르겠어요.', '...기억이 안 나요.', '(대답하지 않는다)'] },
-    { speaker: '손님', text: '사장님?' },
-    { speaker: '사장', text: '몇 년인지.', dynamicText: true },
+    { type: 'choice', choices: ['...잘 모르겠어요.', '...기억이 안 나요.', '(대답하지 않는다)'], responseTexts: [
+      { speaker: '사장', text: '...잘 모르겠어요. 몇 년인지.' },
+      { speaker: '사장', text: '...기억이 안 나요. 언제부터였는지.' },
+      { speaker: '', text: '(사장은 대답하지 않는다)' }
+    ]},
+    { speaker: '손님', text: '사장님...?' },
     { speaker: '손님', text: '(웃음) 그 정도로 오래 하셨구나.' },
     { speaker: '사장', text: '...그런가요.' },
     { speaker: '손님', text: '감사합니다.', action: 'customer_leave' },
@@ -174,7 +177,11 @@ const dialogues = {
     { speaker: '손님', text: '네?' },
     { speaker: '사장', text: '마지막으로 이 문 밖을 나간 게 언제인지.' },
     { speaker: '손님', text: '...집에는 안 가세요?' },
-    { type: 'choice', choices: ['집이요...', '...있긴 한가.', '(대답하지 않는다)'] },
+    { type: 'choice', choices: ['집이요...', '...있긴 한가.', '(대답하지 않는다)'], responseTexts: [
+      { speaker: '사장', text: '집이요... 있긴 하죠. 아마.' },
+      { speaker: '사장', text: '...있긴 한가. 집이라는 게.' },
+      { speaker: '', text: '(사장은 창밖을 바라볼 뿐이다)' }
+    ]},
     { speaker: '손님', text: '(어색한 웃음) 좀 무서운데요.' },
     { speaker: '사장', text: '죄송해요.' },
     { speaker: '손님', text: '아뇨... 괜찮아요. 감사합니다.', action: 'customer_leave' },
@@ -931,8 +938,17 @@ function progressDialogue() {
         dialogueIndex = 0;
         setTimeout(progressDialogue, 500);
       } else {
-        dialogueIndex++;
-        setTimeout(progressDialogue, 100);
+        // 선택에 따른 응답 대사 표시
+        if (d.responseTexts && d.responseTexts[index]) {
+          const response = d.responseTexts[index];
+          dialogueIndex++;
+          showDialogue(response.speaker, response.text, response.action, () => {
+            setTimeout(progressDialogue, 100);
+          });
+        } else {
+          dialogueIndex++;
+          setTimeout(progressDialogue, 100);
+        }
       }
     });
     return;
