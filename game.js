@@ -612,7 +612,7 @@ function drawWorldlineShift() {
     ctx.fillRect(0, y, WIDTH, 1);
   }
 
-  if (elapsed > 45) {
+  if (elapsed > 30) {
     worldlineShift = false;
   }
 }
