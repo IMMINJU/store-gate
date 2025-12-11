@@ -3,14 +3,35 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>편돌이즈 게이트</title>
+  <title>店;Gate - 편돌이즈 게이트</title>
+  <meta name="description" content="3시 12분, 편의점에 갇힌 사장의 세계선 루프 이야기. 슈타인즈 게이트 오마주 도트 비주얼 노벨.">
+  <meta name="keywords" content="店;Gate, 편돌이즈 게이트, 비주얼노벨, 도트게임, 슈타인즈게이트, 타임루프, 편의점">
+  <meta name="author" content="店;Gate Project">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="店;Gate - 편돌이즈 게이트">
+  <meta property="og:description" content="3시 12분, 편의점에 갇힌 사장의 세계선 루프 이야기.">
+  <meta property="og:type" content="website">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="店;Gate - 편돌이즈 게이트">
+  <meta name="twitter:description" content="3시 12분, 편의점에 갇힌 사장의 세계선 루프 이야기.">
+
+  <!-- Theme Color -->
+  <meta name="theme-color" content="#000000">
+
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div id="game-container">
     <canvas id="game-canvas"></canvas>
+    <div id="divergence-meter">
+      <span class="divergence-value">0.337187</span>
+    </div>
     <div id="title-screen">
-      <h1>편돌이즈 게이트</h1>
+      <h1>店;Gate</h1>
+      <p class="subtitle">편돌이즈 게이트</p>
       <p class="start-prompt">클릭하여 시작</p>
     </div>
     <div id="dialogue-box">
@@ -22,6 +43,9 @@
       <div class="choice-item" data-index="0"></div>
       <div class="choice-item" data-index="1"></div>
       <div class="choice-item" data-index="2"></div>
+    </div>
+    <div id="ending-title">
+      <span class="ending-name"></span>
     </div>
   </div>
   <script src="game.js"></script>

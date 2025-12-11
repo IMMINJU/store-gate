@@ -89,6 +89,33 @@ body {
   51%, 100% { opacity: 0.3; }
 }
 
+/* Divergence Meter - Nixie tube style */
+#divergence-meter {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-family: 'Courier New', monospace;
+  font-size: 18px;
+  color: #f80;
+  text-shadow: 0 0 8px #f80, 0 0 16px #f80;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 6px 12px;
+  border: 1px solid #f80;
+  letter-spacing: 2px;
+  opacity: 0;
+  transition: opacity 0.5s;
+  z-index: 5;
+}
+
+#divergence-meter.visible {
+  opacity: 1;
+}
+
+.divergence-value::before {
+  content: 'D: ';
+  color: #a50;
+}
+
 /* 페이드 효과용 오버레이 */
 #game-container::after {
   content: '';
@@ -127,11 +154,19 @@ body {
 }
 
 #title-screen h1 {
-  color: #fff;
-  font-size: 32px;
+  color: #0f0;
+  font-size: 48px;
   text-align: center;
   line-height: 1.4;
-  letter-spacing: 4px;
+  letter-spacing: 8px;
+  margin-bottom: 8px;
+  text-shadow: 0 0 10px #0f0, 0 0 20px #0f0;
+}
+
+#title-screen .subtitle {
+  color: #888;
+  font-size: 16px;
+  letter-spacing: 2px;
   margin-bottom: 40px;
 }
 
@@ -197,4 +232,30 @@ body {
 
 .choice-item.hidden {
   display: none;
+}
+
+/* 엔딩 타이틀 */
+#ending-title {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  opacity: 0;
+  transition: opacity 1s ease-in;
+  z-index: 30;
+  pointer-events: none;
+}
+
+#ending-title.visible {
+  opacity: 1;
+}
+
+.ending-name {
+  display: block;
+  color: #0f0;
+  font-size: 20px;
+  letter-spacing: 4px;
+  text-shadow: 0 0 10px #0f0, 0 0 20px #0f0, 0 0 30px #0f0;
+  white-space: nowrap;
 }

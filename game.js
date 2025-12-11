@@ -1,5 +1,5 @@
 // ============================================
-// 편의점 - 도트 게임
+// 店;Gate - 편돌이즈 게이트
 // ============================================
 
 const canvas = document.getElementById('game-canvas');
@@ -12,6 +12,16 @@ const container = document.getElementById('game-container');
 const titleScreen = document.getElementById('title-screen');
 const choiceBox = document.getElementById('choice-box');
 const choiceItems = document.querySelectorAll('.choice-item');
+const divergenceMeter = document.getElementById('divergence-meter');
+const divergenceValue = document.querySelector('.divergence-value');
+const endingTitle = document.getElementById('ending-title');
+const endingName = document.querySelector('.ending-name');
+
+// 엔딩 이름
+const endingNames = {
+  'go_outside': 'β世界線 END',
+  'stay': 'α世界線 LOOP'
+};
 
 // 캔버스 해상도
 const WIDTH = 128;
@@ -27,6 +37,20 @@ let canProgress = false;
 let typewriterTimeout = null;
 let time = 0;
 let loopCount = 0;
+
+// Divergence 값 (루프별)
+const divergenceValues = {
+  0: '0.337187',  // 루프 1
+  1: '0.337199',  // 루프 2
+  2: '0.409420',  // 루프 3
+  3: '0.456903',  // 루프 4
+  4: '0.571024',  // 루프 5
+  'ending_go': '1.048596',    // 바깥으로 나감
+  'ending_stay': '0.000000',  // 여기 있음 - 다시 처음으로
+};
+let currentDivergence = '0.337187';
+let worldlineShift = false;
+let worldlineShiftTime = 0;
 
 // 선택지 상태
 let showingChoices = false;
@@ -75,6 +99,7 @@ const dialogues = {
 
   loop2: [
     { speaker: '', text: '...3시 12분. ...어?', action: 'show_clock' },
+    { speaker: '', text: '(데자뷰...?)' },
     { speaker: '', text: '(문이 열린다)', action: 'door_open' },
     { speaker: '손님', text: '안녕하세요.', action: 'customer_enter' },
     { speaker: '사장', text: '(잠깐 멈칫) ...어서오세요.' },
@@ -99,6 +124,7 @@ const dialogues = {
 
   loop3: [
     { speaker: '', text: '3시 12분. 또야.', action: 'show_clock' },
+    { speaker: '', text: '(세계선이... 수렴하고 있다)' },
     { speaker: '', text: '(문이 열린다)', action: 'door_open' },
     { speaker: '손님', text: '안녕하세요.', action: 'customer_enter' },
     { speaker: '사장', text: '삼각김밥 저쪽 냉장고요.' },
@@ -126,6 +152,7 @@ const dialogues = {
 
   loop4: [
     { speaker: '', text: '......', action: 'show_clock' },
+    { speaker: '', text: '(어트랙터 필드... 이 시간에 갇혀있다)' },
     { speaker: '', text: '(문이 열린다)', action: 'door_open' },
     { speaker: '손님', text: '안녕하세요.', action: 'customer_enter' },
     { speaker: '사장', text: '...안녕하세요.' },
@@ -157,6 +184,7 @@ const dialogues = {
 
   loop5: [
     { speaker: '', text: '3시 12분.', action: 'show_clock' },
+    { speaker: '', text: '(리딩 슈타이너... 나만 기억한다)' },
     { speaker: '', text: '(문이 열린다)', action: 'door_open' },
     { speaker: '손님', text: '안녕하세요.', action: 'customer_enter' },
     { speaker: '사장', text: '...' },
@@ -169,7 +197,7 @@ const dialogues = {
     { speaker: '사장', text: '가도 다시 와요.' },
     { speaker: '손님', text: '...네?' },
     { speaker: '사장', text: '문이 닫히고, 어두워지고, 다시 3시 12분.' },
-    { speaker: '사장', text: '그리고 당신이 들어와요.' },
+    { speaker: '사장', text: '같은 세계선. 같은 순간. 그리고 당신이 들어와요.' },
     { speaker: '손님', text: '...무슨 소리예요?' },
     { speaker: '사장', text: '나도 몰라요. 근데 맞아요.' },
     { speaker: '손님', text: '(침묵)' },
@@ -198,27 +226,28 @@ const dialogues = {
     { type: 'choice', choices: ['문 밖으로 나간다', '여기 있는다'], isFinalChoice: true },
   ],
 
-  // 엔딩: 밖으로 나감
+  // 엔딩: 밖으로 나감 - Steins;Gate End
   ending_go: [
-    { speaker: '', text: '(문을 연다)', action: 'open_door_ending' },
+    { speaker: '', text: '(세계선을 넘는다)', action: 'open_door_ending' },
     { speaker: '', text: '(발을 내딛는다)' },
     { speaker: '', text: '...' },
     { speaker: '', text: '(형광등 불빛)', action: 'show_store_again' },
     { speaker: '', text: '(진열대. 냉장고. 카운터.)' },
-    { speaker: '', text: '(편의점이다.)' },
+    { speaker: '', text: '(다른 세계선의... 편의점)' },
     { speaker: '???', text: '어서오세요.' },
     { speaker: '', text: '(카운터 뒤에 누군가 서 있다)' },
     { speaker: '', text: '(나와 같은 앞치마를 입은)' },
-    { speaker: '', text: '...' },
+    { speaker: '', text: '(다이버전스 1%의 장벽을 넘어도)' },
+    { speaker: '', text: '(이곳에서 벗어날 수 없었다)' },
     { speaker: '', text: '', action: 'ending_fade' },
   ],
 
-  // 엔딩: 여기 있음
+  // 엔딩: 여기 있음 - α세계선 Loop End
   ending_stay: [
     { speaker: '', text: '(가만히 서 있는다)' },
-    { speaker: '', text: '...' },
+    { speaker: '', text: '(세계선은 수렴한다)' },
     { speaker: '', text: '(형광등이 깜빡인다)', action: 'flicker_intense' },
-    { speaker: '', text: '...' },
+    { speaker: '', text: '(어트랙터 필드의 지배...)' },
     { speaker: '', text: '(문이 열리는 소리)', action: 'door_sound' },
     { speaker: '', text: '...' },
     { speaker: '', text: '...3시 12분.', action: 'show_clock_final' },
@@ -514,6 +543,81 @@ let currentCutscene = null;
 let endingFadeOpacity = 0;
 
 // ============================================
+// Divergence 미터 & 세계선 이동
+// ============================================
+function updateDivergence(newValue, animate = true) {
+  if (animate && newValue !== currentDivergence) {
+    // 세계선 변동 연출
+    worldlineShift = true;
+    worldlineShiftTime = time;
+
+    // 숫자 롤링 애니메이션
+    let rollCount = 0;
+    const rollInterval = setInterval(() => {
+      const randomValue = Math.random().toFixed(6);
+      divergenceValue.textContent = randomValue;
+      rollCount++;
+      if (rollCount > 15) {
+        clearInterval(rollInterval);
+        divergenceValue.textContent = newValue;
+        currentDivergence = newValue;
+      }
+    }, 50);
+  } else {
+    divergenceValue.textContent = newValue;
+    currentDivergence = newValue;
+  }
+}
+
+function showDivergenceMeter() {
+  divergenceMeter.classList.add('visible');
+}
+
+function hideDivergenceMeter() {
+  divergenceMeter.classList.remove('visible');
+}
+
+function showEndingTitle(type) {
+  const name = endingNames[type];
+  if (name) {
+    endingName.textContent = name;
+    endingTitle.classList.add('visible');
+  }
+}
+
+function hideEndingTitle() {
+  endingTitle.classList.remove('visible');
+}
+
+// 세계선 이동 화면 효과
+function drawWorldlineShift() {
+  const elapsed = time - worldlineShiftTime;
+
+  // 화면 글리치 효과
+  for (let i = 0; i < 10; i++) {
+    const y = Math.random() * HEIGHT;
+    const h = Math.random() * 5 + 1;
+    const offset = (Math.random() - 0.5) * 20;
+
+    ctx.save();
+    ctx.translate(offset, 0);
+    ctx.fillStyle = `rgba(0, 255, 0, ${0.3 * Math.random()})`;
+    ctx.fillRect(0, y, WIDTH, h);
+    ctx.restore();
+  }
+
+  // 수직 스캔 라인
+  ctx.fillStyle = 'rgba(0, 255, 0, 0.1)';
+  for (let y = 0; y < HEIGHT; y += 2) {
+    ctx.fillRect(0, y, WIDTH, 1);
+  }
+
+  if (elapsed > 45) {
+    worldlineShift = false;
+  }
+}
+
+// ============================================
 // 선택지 UI (HTML 기반)
 // ============================================
 function showChoices(choiceList, callback, isFinal = false) {
@@ -641,6 +745,10 @@ function handleAction(action) {
     case 'ending_fade':
       currentScene = 'ending_fade';
       endingStartTime = time;
+      // 엔딩 타이틀 표시
+      setTimeout(() => {
+        showEndingTitle(endingType);
+      }, 1000);
       break;
   }
 }
@@ -711,6 +819,11 @@ function render() {
   drawConvenienceStore();
   drawClerk(clerk.x, 42, clerk.state);
   drawCustomer(customer.x, 75, customer.state);
+
+  // 세계선 이동 효과
+  if (worldlineShift) {
+    drawWorldlineShift();
+  }
 }
 
 // ============================================
@@ -774,6 +887,9 @@ function progressDialogue() {
     dialogueIndex = 0;
     loopCount = 0;
     resetState();
+    // Divergence 미터 표시
+    showDivergenceMeter();
+    updateDivergence(divergenceValues[0], false);
   }
 
   if (currentScene === 'ending_fade') {
@@ -782,6 +898,8 @@ function progressDialogue() {
       currentScene = 'title';
       titleScreen.classList.remove('hidden');
       hideDialogue();
+      hideDivergenceMeter();
+      hideEndingTitle();
       endingType = null;
       endingFadeOpacity = 0;
       return;
@@ -804,9 +922,11 @@ function progressDialogue() {
         if (index === 0) {
           endingType = 'go_outside';
           currentScene = 'ending_go';
+          updateDivergence(divergenceValues['ending_go'], true);
         } else {
           endingType = 'stay';
           currentScene = 'ending_stay';
+          updateDivergence(divergenceValues['ending_stay'], true);
         }
         dialogueIndex = 0;
         setTimeout(progressDialogue, 500);
@@ -828,6 +948,10 @@ function startNextLoop() {
   customer.x = -20;
   doorOpen = false;
   showItems = false;
+
+  // 세계선 변동 (Divergence 업데이트)
+  const newDivergence = divergenceValues[loopCount] || divergenceValues[4];
+  updateDivergence(newDivergence, true);
 
   fadeIn();
   setTimeout(progressDialogue, 500);
